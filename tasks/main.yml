@@ -5,6 +5,7 @@
     path: '{{ hadoop_dir }}'
   changed_when: false
   register: hadoop_binary
+
 - when: not hadoop_binary.stat.exists
   block:
     - name: downloading {{ hadoop_url }}...
@@ -23,6 +24,8 @@
         src: '{{ hadoop_tmp_archive }}'
         dest: '{{ hadoop_parent_dir }}'
         creates: '{{ hadoop_dir }}'
+        owner: 'root'
+        group: 'root'
   always:
     - name: rm {{ hadoop_tmp_archive }}
       become: yes
@@ -30,6 +33,7 @@
       file:
         path: '{{ hadoop_tmp_archive }}'
         state: absent
+
 - name: linking {{ hadoop_link_dir }} to {{ hadoop_dir }}...
   become: yes
   become_user: root
@@ -44,6 +48,78 @@
   with_items:
     - f: hadoop.sh
       d: /etc/profile.d
+  template:
+    src: '{{ item.f }}.j2'
+    dest: '{{ item.d }}/{{ item.f }}'
+    mode: '{{ item.m | default("0644") }}'
+
+- name: Create expected /var/log and /var/run directories
+  become: yes
+  become_user: root
+  with_items:
+    - d: /var/log/hadoop
+    - d: /var/run/hadoop
+    - d: /var/log/hadoop/hdfs
+      m: "0750"
+      o: "hdfs"
+      g: "hadoop"
+    - d: /var/run/hadoop/hdfs
+      m: "0750"
+      o: "hdfs"
+      g: "hadoop"
+    - d: /var/run/hadoop/yarn
+      m: "0750"
+      o: "yarn"
+      g: "hadoop"
+    - d: /var/log/hadoop/yarn
+      m: "0750"
+      o: "yarn"
+      g: "hadoop"
+    - d: /var/run/hadoop/mapred
+      m: "0750"
+      o: "mapred"
+      g: "hadoop"
+    - d: /var/log/hadoop/mapred
+      m: "0750"
+      o: "mapred"
+      g: "hadoop"
+  file:
+    state: directory
+    path: '{{ item.d }}'
+    mode: '{{ item.m | default("0755") }}'
+    owner: '{{ item.o | default("root") }}'
+    group: '{{ item.g | default("root") }}'
+
+- name: Creating {{ hadoop_conf_dir }}
+  become: yes
+  become_user: root
+  file:
+    state: directory
+    path: '{{ hadoop_conf_dir }}'
+    mode: '0755'
+
+- name: Add hadoop configuration templates
+  become: yes
+  become_user: root
+  with_items:
+    - f: 'core-site.xml'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'capacity-scheduler.xml'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'hadoop-env.sh'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'hdfs-site.xml'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'mapred-site.xml'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'mapred-env.sh'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'yarn-site.xml'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'yarn-env.sh'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'log4j.properties'
+      d: '{{ hadoop_conf_dir }}'
   template:
     src: '{{ item.f }}.j2'
     dest: '{{ item.d }}/{{ item.f }}'

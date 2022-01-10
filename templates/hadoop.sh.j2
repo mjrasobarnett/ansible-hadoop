@@ -1,1 +1,3 @@
-export PATH=$PATH:{{hadoop_parent_dir}}/hadoop/bin
+export HADOOP_HOME={{ hadoop_link_dir }}
+export HADOOP_CONF_DIR={{ hadoop_conf_dir }}
+export PATH=$PATH:{{ hadoop_link_dir }}/bin
