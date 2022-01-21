@@ -120,6 +120,10 @@
       d: '{{ hadoop_conf_dir }}'
     - f: 'log4j.properties'
       d: '{{ hadoop_conf_dir }}'
+    - f: 'dfs.exclude'
+      d: '{{ hadoop_conf_dir }}'
+    - f: 'yarn.exclude'
+      d: '{{ hadoop_conf_dir }}'
   template:
     src: '{{ item.f }}.j2'
     dest: '{{ item.d }}/{{ item.f }}'
