@@ -18,6 +18,9 @@
 {% if hadoop_yarn_site_properties is defined %}
 {% for params in hadoop_yarn_site_properties %}
     <property>
+{% if params.comment is defined %}
+        <!-- {{ params.comment }} -->
+{% endif %}
         <name>{{ params.name }}</name>
         <value>{{ params.value }}</value>
 {% if params.description is defined %}
